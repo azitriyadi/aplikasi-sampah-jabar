@@ -1,0 +1,15 @@
+# Abaikan folder hasil build (Sampah Visual Studio)
+bin/
+obj/
+Debug/
+Release/
+
+# Abaikan file konfigurasi user lokal
+.vs/
+*.user
+*.suo
+*.opensdf
+*.sdf
+
+# Abaikan paket (Library) yang bisa didownload ulang
+packages/
