@@ -10,6 +10,8 @@ namespace aplikasi_sampah_jabar
 {
     public partial class Dashboard : Form
     {
+        public static string NamaUserAktif = "Admin";
+
         private Label lblTotalBerat;
         private Label lblTotalData;
         private IMongoCollection<SampahModel> _collection;
@@ -17,8 +19,13 @@ namespace aplikasi_sampah_jabar
         public Dashboard()
         {
             InitializeComponent();
+            this.StartPosition = FormStartPosition.CenterScreen;
 
-            // 1. SETUP DATABASE
+            // Set label nama user (Pastikan lblNamaUser ada di Designer)
+            if (this.lblNamaUser != null)
+                this.lblNamaUser.Text = "Login sebagai: " + NamaUserAktif;
+
+            // Setup DB
             try
             {
                 var database = MongoHelper.GetDatabase();
@@ -26,28 +33,19 @@ namespace aplikasi_sampah_jabar
             }
             catch (Exception ex) { MessageBox.Show("Error DB: " + ex.Message); }
 
-            // 2. TAMPILKAN STATISTIK DI AWAL (Masuk ke pnlMain)
             TampilkanStatistikUtama();
-
-            // Note: Event tombol sudah dipasang di Designer (this.Menu_Click)
-            // Jadi kita tinggal isi logika di fungsi Menu_Click saja.
         }
 
-        // --- FUNGSI NAVIGASI: Memasukkan Form ke dalam pnlMain ---
         private void BukaHalaman(Form frmAnak)
         {
-            // Bersihkan isi pnlMain
             if (this.pnlMain.Controls.Count > 0)
                 this.pnlMain.Controls.Clear();
 
-            // Pengaturan Form Anak
             frmAnak.TopLevel = false;
             frmAnak.FormBorderStyle = FormBorderStyle.None;
             frmAnak.Dock = DockStyle.Fill;
 
-            // Tambahkan ke pnlMain
             this.pnlMain.Controls.Add(frmAnak);
-            this.pnlMain.Tag = frmAnak;
             frmAnak.Show();
         }
 
@@ -56,17 +54,11 @@ namespace aplikasi_sampah_jabar
             this.pnlMain.Controls.Clear();
             this.lblTitle.Text = "Dashboard Overview";
 
-            // Buat Kartu Statistik secara Coding
-            int startX = 40;
-            int startY = 40;
-
-            // KARTU 1 (Hijau)
-            Panel p1 = BuatPanelStatistik(this.pnlMain, startX, startY, Color.SeaGreen);
+            Panel p1 = BuatPanelStatistik(this.pnlMain, 40, 40, Color.SeaGreen);
             BuatLabelInfo(p1, "Total Sampah Terkumpul");
             lblTotalBerat = BuatLabelNilai(p1, "0 Kg");
 
-            // KARTU 2 (Biru)
-            Panel p2 = BuatPanelStatistik(this.pnlMain, startX + 300, startY, Color.RoyalBlue);
+            Panel p2 = BuatPanelStatistik(this.pnlMain, 340, 40, Color.RoyalBlue);
             BuatLabelInfo(p2, "Jumlah Transaksi");
             lblTotalData = BuatLabelNilai(p2, "0 Data");
 
@@ -78,14 +70,6 @@ namespace aplikasi_sampah_jabar
             Button btn = (Button)sender;
             string teks = btn.Text.ToLower();
 
-            // Reset warna semua tombol (opsional agar user tahu tombol mana yang aktif)
-            foreach (Control c in pnlSidebar.Controls)
-            {
-                if (c is Button) c.ForeColor = Color.Gray;
-            }
-            btn.ForeColor = Color.FromArgb(245, 158, 11); // Warna aktif (Oranye)
-
-            // Logika Navigasi
             if (teks.Contains("dashboard"))
             {
                 TampilkanStatistikUtama();
@@ -97,12 +81,28 @@ namespace aplikasi_sampah_jabar
             }
             else if (teks.Contains("wastebot") || teks.Contains("ai"))
             {
-                this.lblTitle.Text = "Jabar Waste AI Assistant";
+                this.lblTitle.Text = "WasteBot AI Assistant";
                 BukaHalaman(new JabarWasteAI());
             }
             else if (teks.Contains("laporan") || teks.Contains("pdf"))
             {
+                // SEKARANG AKAN MUNCUL POP-UP
                 EksporKePDF();
+            }
+            else if (teks.Contains("logout"))
+            {
+                AksiLogout();
+            }
+        }
+
+        private void AksiLogout()
+        {
+            if (MessageBox.Show("Yakin ingin logout?", "Konfirmasi", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                this.Hide();
+                // Pastikan LoginForm ada di project kamu
+                LoginForm login = new LoginForm();
+                login.Show();
             }
         }
 
@@ -112,50 +112,60 @@ namespace aplikasi_sampah_jabar
             try
             {
                 var data = _collection.Find(new BsonDocument()).ToList();
-                if (lblTotalData != null) lblTotalData.Text = data.Count + " Data";
-                if (lblTotalBerat != null) lblTotalBerat.Text = data.Sum(x => x.Berat).ToString("N2") + " Kg";
+                lblTotalData.Text = data.Count + " Data";
+                lblTotalBerat.Text = data.Sum(x => x.Berat).ToString("N2") + " Kg";
             }
             catch { }
         }
 
         private void EksporKePDF()
         {
-            List<SampahModel> dataList = _collection.Find(new BsonDocument()).ToList();
-            if (dataList.Count == 0) { MessageBox.Show("Data kosong!"); return; }
+            // Cek data dulu sebelum munculkan pop-up
+            if (_collection == null) return;
+            var dataList = _collection.Find(new BsonDocument()).ToList();
 
-            SaveFileDialog sfd = new SaveFileDialog { Filter = "PDF File|*.pdf", FileName = "Laporan_" + DateTime.Now.ToString("yyyyMMdd") };
+            if (dataList.Count == 0)
+            {
+                MessageBox.Show("Tidak ada data untuk dicetak!");
+                return;
+            }
+
+            // POP-UP UNTUK SIMPAN FILE
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Filter = "PDF File|*.pdf";
+            sfd.FileName = "Laporan_Sampah_" + DateTime.Now.ToString("yyyyMMdd");
+
             if (sfd.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    PdfService pdfService = new PdfService();
-                    pdfService.ExportLaporanSampah(sfd.FileName, dataList);
-                    MessageBox.Show("PDF Berhasil Disimpan!");
+                    // Panggil Service PDF
+                    PdfService pdf = new PdfService();
+                    pdf.ExportLaporanSampah(sfd.FileName, dataList);
+                    MessageBox.Show("Laporan PDF berhasil disimpan!");
                 }
-                catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Gagal ekspor: " + ex.Message);
+                }
             }
         }
 
-        #region UI Helpers
-        private Panel BuatPanelStatistik(Control parent, int x, int y, Color c)
+        // Helper UI
+        private Panel BuatPanelStatistik(Control pnt, int x, int y, Color c)
         {
             Panel p = new Panel { Size = new Size(260, 150), Location = new Point(x, y), BackColor = c };
-            parent.Controls.Add(p);
-            return p;
+            pnt.Controls.Add(p); return p;
         }
-
         private void BuatLabelInfo(Panel p, string t)
         {
-            Label l = new Label { Text = t, ForeColor = Color.White, Font = new Font("Segoe UI", 11), Location = new Point(20, 20), AutoSize = true };
+            Label l = new Label { Text = t, ForeColor = Color.White, Location = new Point(20, 20), AutoSize = true };
             p.Controls.Add(l);
         }
-
         private Label BuatLabelNilai(Panel p, string t)
         {
-            Label l = new Label { Text = t, ForeColor = Color.White, Font = new Font("Segoe UI", 24, FontStyle.Bold), Location = new Point(20, 55), AutoSize = true };
-            p.Controls.Add(l);
-            return l;
+            Label l = new Label { Text = t, ForeColor = Color.White, Font = new Font("Segoe UI", 22, FontStyle.Bold), Location = new Point(20, 50), AutoSize = true };
+            p.Controls.Add(l); return l;
         }
-        #endregion
     }
 }
