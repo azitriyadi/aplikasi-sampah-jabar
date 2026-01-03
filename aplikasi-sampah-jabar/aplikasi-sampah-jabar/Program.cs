@@ -8,9 +8,10 @@ namespace aplikasi_sampah_jabar
         [STAThread]
         static void Main()
         {
+            // Kita pakai inisialisasi modern (sesuai versi kamu/HEAD)
             ApplicationConfiguration.Initialize();
 
-            // KITA PILIH LOGIN FORM SEBAGAI PINTU MASUK UTAMA
+            // PENTING: Jalankan LoginForm sebagai pintu masuk utama
             Application.Run(new LoginForm());
         }
     }

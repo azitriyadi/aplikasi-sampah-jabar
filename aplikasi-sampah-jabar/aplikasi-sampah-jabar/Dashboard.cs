@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -40,5 +41,12 @@ namespace aplikasi_sampah_jabar
                 }
             }
         }
+=======
+﻿
+namespace aplikasi_sampah_jabar
+{
+    internal class Dashboard : Form
+    {
+>>>>>>> origin/feature/fe-ui-forms
     }
 }
