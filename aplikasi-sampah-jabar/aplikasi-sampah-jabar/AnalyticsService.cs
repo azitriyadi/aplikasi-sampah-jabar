@@ -14,7 +14,7 @@ namespace aplikasi_sampah_jabar
         public AnalyticsService()
         {
             // Menghubungkan ke database via MongoHelper
-            var database = MongoHelper.GetDatabase();
+            var database = Mo.GetDatabase();
             _koleksiSampah = database.GetCollection<SampahModel>("data_sampah_jabar");
         }
 
