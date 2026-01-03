@@ -10,8 +10,7 @@ namespace aplikasi_sampah_jabar
         {
             ApplicationConfiguration.Initialize();
 
-            // Jangan langsung jalankan LoginForm
-            // Buat instance dan kontrol secara manual
+            // KITA PILIH LOGIN FORM SEBAGAI PINTU MASUK UTAMA
             Application.Run(new LoginForm());
         }
     }
