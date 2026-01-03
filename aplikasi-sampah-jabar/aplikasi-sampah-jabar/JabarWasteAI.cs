@@ -1,76 +1,119 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Threading.Tasks; // Wajib untuk Async
 using System.Windows.Forms;
 
 namespace aplikasi_sampah_jabar
 {
     public partial class JabarWasteAI : Form
     {
+        // --- 1. SETTING API KEY ---
+        // Tempel API Key Mistral kamu di dalam tanda kutip di bawah ini!
+        private const string API_KEY = "HN62NiPH8oNq5If7f19dZGKFksJ3SwMe";
+
+        // Service penghubung ke AI
+        private ChatbotService _aiService;
+
+        // Riwayat Chat (Supaya AI ingat konteks pembicaraan sebelumnya)
+        private List<ChatMessage> _chatHistory;
+
         public JabarWasteAI()
         {
             InitializeComponent();
-            // Pesan sambutan otomatis
-            AddMessage("Halo! Saya Jabar Waste AI. Ada yang bisa saya bantu terkait pengelolaan sampah hari ini?", false);
+
+            // Inisialisasi Service & List
+            _aiService = new ChatbotService();
+            _chatHistory = new List<ChatMessage>();
+
+            // Setup Pesan Awal (System Prompt)
+            // Ini agar AI tahu dia berperan sebagai siapa
+            _chatHistory.Add(new ChatMessage
+            {
+                role = "system",
+                content = "Kamu adalah asisten pintar bernama 'Jabar Waste AI'. Tugasmu membantu menjawab pertanyaan seputar pengelolaan sampah, daur ulang, dan lingkungan hidup di Jawa Barat. Jawab dengan ramah, singkat, dan jelas."
+            });
+
+            // Sapaan pembuka di layar
+            AddMessageBubble("Halo! Saya Jabar Waste AI. Ada yang bisa saya bantu tentang sampah hari ini?", false);
         }
 
-        private void btnKirim_Click(object sender, EventArgs e)
+        // --- EVENT KLIK TOMBOL KIRIM ---
+        // Perhatikan ada kata 'async' karena kita akan request ke internet
+        private async void btnKirim_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(txtInput.Text))
+            string userText = txtInput.Text.Trim();
+
+            // Cek jika kosong
+            if (string.IsNullOrWhiteSpace(userText)) return;
+
+            // 1. Tampilkan Pesan User di Layar
+            AddMessageBubble(userText, true);
+            txtInput.Clear();
+            txtInput.Enabled = false; // Kunci input biar gak spam
+            btnKirim.Enabled = false;
+            btnKirim.Text = "Loading...";
+
+            try
             {
-                // Tampilkan pesan user
-                AddMessage(txtInput.Text, true);
+                // 2. Masukkan pesan user ke History
+                _chatHistory.Add(new ChatMessage { role = "user", content = userText });
 
-                // Logika respon bot sederhana
-                string userText = txtInput.Text.ToLower();
-                txtInput.Clear();
+                // 3. KIRIM KE API MISTRAL (Proses Internet)
+                // Kita pakai model "open-mistral-7b" karena gratis dan cepat
+                string jawabanAI = await _aiService.KirimPesanKeAI(API_KEY, "open-mistral-7b", _chatHistory);
 
-                System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
-                timer.Interval = 1000; // Delay 1 detik seolah bot berpikir
-                timer.Tick += (s, args) =>
-                {
-                    timer.Stop();
-                    string respon = GetBotResponse(userText);
-                    AddMessage(respon, false);
-                };
-                timer.Start();
+                // 4. Masukkan jawaban AI ke History (Biar dia ingat)
+                _chatHistory.Add(new ChatMessage { role = "assistant", content = jawabanAI });
+
+                // 5. Tampilkan Jawaban AI di Layar
+                AddMessageBubble(jawabanAI, false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Terjadi kesalahan koneksi: " + ex.Message);
+                AddMessageBubble("Maaf, saya sedang pusing (Error Koneksi). Coba lagi ya.", false);
+            }
+            finally
+            {
+                // Buka kunci input
+                txtInput.Enabled = true;
+                btnKirim.Enabled = true;
+                btnKirim.Text = "Kirim";
+                txtInput.Focus();
             }
         }
 
-        private string GetBotResponse(string input)
-        {
-            if (input.Contains("jadwal")) return "Jadwal pengangkutan sampah di wilayah Jabar biasanya dilakukan setiap hari Selasa dan Jumat.";
-            if (input.Contains("plastik")) return "Sampah plastik sebaiknya dipisahkan dan dibersihkan sebelum disetor ke Bank Sampah.";
-            if (input.Contains("lokasi")) return "Anda bisa melihat lokasi Bank Sampah terdekat melalui menu 'Map' di sidebar.";
-            return "Maaf, saya masih belajar. Bisa Anda tanyakan hal lain mengenai sampah organik, plastik, atau jadwal angkut?";
-        }
-
-        private void AddMessage(string text, bool isUser)
+        // --- FUNGSI MEMBUAT BALON CHAT (UI) ---
+        private void AddMessageBubble(string text, bool isUser)
         {
             Label lbl = new Label();
-            lbl.Text = (isUser ? "Anda: " : "AI: ") + text;
+            lbl.Text = text;
             lbl.AutoSize = true;
-            lbl.MaximumSize = new Size(pnlChatHistory.Width - 40, 0);
+            lbl.MaximumSize = new Size(pnlChatHistory.Width - 50, 0); // Batas lebar biar teks turun ke bawah
             lbl.Padding = new Padding(10);
-            lbl.Margin = new Padding(0, 5, 0, 5);
+            lbl.Font = new Font("Segoe UI", 10);
+            lbl.Margin = new Padding(0, 0, 0, 10); // Jarak antar chat
 
             if (isUser)
             {
-                lbl.BackColor = Color.FromArgb(245, 158, 11); // Oranye (User)
+                // Tampilan User (Oranye, Rata Kanan)
+                lbl.BackColor = Color.FromArgb(245, 158, 11);
                 lbl.ForeColor = Color.White;
+                // Trik rata kanan di FlowLayoutPanel agak tricky, 
+                // tapi kita bedakan warnanya saja sudah cukup jelas.
             }
             else
             {
-                lbl.BackColor = Color.FromArgb(233, 236, 239); // Abu-abu (Bot)
+                // Tampilan AI (Abu-abu, Rata Kiri)
+                lbl.BackColor = Color.FromArgb(233, 236, 239);
                 lbl.ForeColor = Color.Black;
             }
 
             pnlChatHistory.Controls.Add(lbl);
+
+            // Scroll otomatis ke bawah
             pnlChatHistory.ScrollControlIntoView(lbl);
-        }
-
-        private void pnlChatHistory_Paint(object sender, PaintEventArgs e)
-        {
-
         }
     }
 }
