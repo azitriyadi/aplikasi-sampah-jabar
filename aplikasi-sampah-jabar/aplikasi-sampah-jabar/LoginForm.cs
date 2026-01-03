@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace aplikasi_sampah_jabar
@@ -8,24 +9,60 @@ namespace aplikasi_sampah_jabar
         public LoginForm()
         {
             InitializeComponent();
+
+            // Hover effect tombol login
+            btnLogin.MouseEnter += (s, e) =>
+            {
+                btnLogin.BackColor = Color.FromArgb(234, 88, 12);
+            };
+
+            btnLogin.MouseLeave += (s, e) =>
+            {
+                btnLogin.BackColor = Color.FromArgb(249, 115, 22);
+            };
+
+            // Percantik textbox
+            SetupTextBox(txtUser);
+            SetupTextBox(txtPass);
         }
 
-        private void btnLogin_Click(object sender, EventArgs e)
+        private void SetupTextBox(TextBox txt)
         {
-            if (txtUsername.Text == "admin" && txtPassword.Text == "123")
+            txt.BackColor = Color.FromArgb(241, 245, 249);
+            txt.BorderStyle = BorderStyle.FixedSingle;
+
+            txt.GotFocus += (s, e) =>
             {
-                MessageBox.Show("Login berhasil (sementara)");
-            }
-            else
+                txt.BackColor = Color.White;
+            };
+
+            txt.LostFocus += (s, e) =>
             {
-                MessageBox.Show("Username atau Password salah!");
-            }
+                txt.BackColor = Color.FromArgb(241, 245, 249);
+            };
         }
 
-        private void lblKeRegister_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        // =========================
+        // LINK KE REGISTER (FIX)
+        // =========================
+        private void lblRegister_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
+            RegisterForm registerForm = new RegisterForm();
+            registerForm.Show();
             this.Hide();
-            new RegisterForm().Show();
+
+            // Saat register ditutup ? balik ke login
+            registerForm.FormClosed += (s, args) =>
+            {
+                this.Show();
+                this.BringToFront();
+            };
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            Application.Exit();
         }
     }
 }

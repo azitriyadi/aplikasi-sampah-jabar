@@ -1,34 +1,51 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace aplikasi_sampah_jabar
 {
     public partial class RegisterForm : Form
     {
-        public RegisterForm() => InitializeComponent();
-
-        private void btnRegister_Click(object sender, EventArgs e)
+        public RegisterForm()
         {
-            if (string.IsNullOrEmpty(txtUser.Text) || string.IsNullOrEmpty(txtPass.Text))
+            InitializeComponent();
+
+            // Hover effect tombol daftar
+            btnReg.MouseEnter += (s, e) =>
             {
-                MessageBox.Show("Data tidak boleh kosong!");
-                return;
-            }
-            MessageBox.Show("Registrasi Berhasil! Silakan Login.");
-            this.Hide();
-            new LoginForm().Show();
+                btnReg.BackColor = Color.FromArgb(4, 120, 87);
+            };
+
+            btnReg.MouseLeave += (s, e) =>
+            {
+                btnReg.BackColor = Color.FromArgb(16, 185, 129);
+            };
+
+            // Percantik textbox
+            SetupTextBox(txtUser);
+            SetupTextBox(txtPass);
+            SetupTextBox(txtConfirm);
         }
 
-        private void lblLoginLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void SetupTextBox(TextBox txt)
         {
-            this.Hide();
-            new LoginForm().Show();
+            txt.BackColor = Color.FromArgb(241, 245, 249);
+            txt.BorderStyle = BorderStyle.FixedSingle;
+
+            txt.GotFocus += (s, e) =>
+            {
+                txt.BackColor = Color.White;
+            };
+
+            txt.LostFocus += (s, e) =>
+            {
+                txt.BackColor = Color.FromArgb(241, 245, 249);
+            };
         }
 
         private void lblKeLogin_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            this.Hide();
-            new LoginForm().Show();
+            this.Close(); // balik ke login
         }
     }
 }
