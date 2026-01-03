@@ -1,16 +1,11 @@
-﻿namespace aplikasi_sampah_jabar
+﻿using System.Windows.Forms;
+
+namespace MistralChatbot
 {
     partial class Form1
     {
-        /// <summary>
-        ///  Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        ///  Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -20,14 +15,9 @@
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
-
-        /// <summary>
-        ///  Required method for Designer support - do not modify
-        ///  the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
+<<<<<<< HEAD
             button1 = new Button();
             SuspendLayout();
             // 
@@ -41,10 +31,15 @@
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
+=======
+            SuspendLayout();
+            // 
+>>>>>>> origin/feature/be-chatbot-logic
             // Form1
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
+<<<<<<< HEAD
             ClientSize = new Size(800, 450);
             Controls.Add(button1);
             Name = "Form1";
@@ -56,5 +51,13 @@
         #endregion
 
         private Button button1;
+=======
+            ClientSize = new Size(1154, 768);
+            Margin = new Padding(5, 6, 5, 6);
+            Name = "Form1";
+            Text = "Mistral AI Chatbot";
+            ResumeLayout(false);
+        }
+>>>>>>> origin/feature/be-chatbot-logic
     }
 }

@@ -8,8 +8,11 @@ namespace aplikasi_sampah_jabar
         [STAThread]
         static void Main()
         {
-            ApplicationConfiguration.Initialize();
-            Application.Run(new LoginForm()); // TETAP PILIH LOGIN
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
+            // KITA PILIH LOGIN FORM SEBAGAI PINTU MASUK
+            Application.Run(new LoginForm());
         }
     }
 }
